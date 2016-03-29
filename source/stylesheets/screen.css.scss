@@ -81,6 +81,9 @@ html, body {
 
   // This is the logo at the top of the ToC
   &>img {
+    padding-top: 15px;
+    padding-bottom: 15px;
+    margin: auto;
     display: block;
     max-width: 100%;
   }
@@ -161,7 +164,7 @@ html, body {
     list-style: none;
     margin: 0;
     padding: 0;
-    line-height: 28px;
+    line-height: 48px;
   }
 
   li {
@@ -296,8 +299,8 @@ html, body {
     float:left;
     color: $lang-select-text;
     text-decoration: none;
-    padding: 0 10px;
-    line-height: 30px;
+    padding: 0 32px;
+    line-height: 64px;
     outline: 0;
 
     &:active, &:focus {
@@ -467,6 +470,10 @@ html, body {
     padding: 0;
   }
 
+  ol>li>aside {
+    padding-left: 0.5em;
+  }
+
   aside {
     padding-top: 1em;
     padding-bottom: 1em;
@@ -606,6 +613,13 @@ html, body {
 
   .page-wrapper .lang-selector {
     display: none;
+  }
+
+  .lang-selector {
+    a {
+      padding: 0 10px;
+      line-height: 30px;
+    }
   }
 
   %right-col {
