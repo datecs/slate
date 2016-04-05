@@ -48,6 +48,7 @@ All device classes extends our fiscal protocol interface and implement it.
 
 | Name      | Localization | Supported from |
 |:----------|:-------------|:--------------:|
+| FP-700    |   Federation Bosnia | 2.1.0   |
 | FMP-705KL |   Bulgaria   |      2.1.0     |
 | WP-500KL  |   Bulgaria   |      2.1.0     |
 | DP-15KL   |   Bulgaria   |      2.1.0     |
@@ -243,17 +244,24 @@ device.checkAndResolve();
 
 # APIs Usage
 
-Make sure your printer is in normal state before executing single or multiple commands.
-If your printer stuck in some not working state, SDK can try to set it in normal state
-using `checkAndResolve`.
-
 > Check and resolve device problems
 
 ```java
 FiscalDevice device = ...;
 device.checkAndResolve();
-
 ```
+
+Make sure your printer is in normal state before executing single or multiple commands.
+If your printer stuck in some not working state, SDK can try to set it in normal state
+using `checkAndResolve`.
+
+
+Take a look on [customCommand](#custom-command) if there's missing methods on the API,
+but still supported by printer, but be careful. Because of variety of devices and
+countries this API define subset of all commands and it's a superset of all common
+and widely used commands. Before writing your own logic using `customCommand` please
+check if the desired command exists in device country extension or some of
+the peripheral controls.
 
 ## Sales
 To sale something there are some things you might know:
@@ -413,9 +421,132 @@ All fiscal devices supports X and Z daily reports, simple and detailed reports o
 document number or by date and time range. Reports are printed out, but you can retrieve data directly from
 device's electronic journal (if supported). Check [Journal](#journal) section for more details.
 
+To print X or Z report use respectively `device.printZReport()` or `device.printXReport()`;
+
+<aside class="notice">Date and time format is: dd-MM-yy hh:mm:ss</aside>
+
+For report by date or number use:
+
+- `printReportByDate()`
+- `printReportByNumber()`
+- `printDetailedReportByDate()`
+- `printDetailedReportByNumber()`
+
 ## Items
+
+### Available methods
+
+| Method | Description |
+| ------ | ----------- |
+| `defineItem()` |
+| `changeItemQuantity()` |
+| `getItemsInfo()` |
+| `getItem()` |
+| `getFirstItem()` |
+| `getLastItem()` |
+| `getNextItem()` |
+| `getFirstItemWithSales()` |
+| `getLastItemWithSales()` |
+| `getNextItemWithSales()` |
+| `getFirstFreeItem()` |
+| `getLastFreeItem()` |
+| `deleteItem()` |
+| `deleteItems()` |
+| 'deleteItems()' |
+
 ## Journal
+
+<aside class="warning">Before start working with journal make sure your device supports it.</aside>
+
+[Here](#check-control-capability) you find how to check if device support some peripheral control
+
+Most of the devices supports EJ (aka. Electronic Journal). EJ holds all both
+fiscal and non-fiscal data in energy independent memory. EJ has it's own capacity.
+In some situations you must have read access to old documents. Datecs Fiscal Framework
+provides simple way to retrieve documents from the journal, by name or by some date time range.
+
+### Get journal documents
+
+
+
+### Get last document from the journal
+
+> Get last document from journal
+
+```java
+JournalControl ctrl = ...;
+
+final FiscalResponse rspn = ctrl.getJournalDocumentRange();
+
+// Check last document number
+
+int last = rspn.getInt(JournalControl.RESP_LAST_DOC);
+
+if (last != -1) {
+  ctrl.printJournalDocument(last);
+
+  // or if we want to get it
+
+  String document = ctrl.getJournalDocument(last).getString(JournalControl.RESP_PARAM_TEXT);
+
+  // Do whatever you want with the documents content
+} else {
+  // Something goes wrong and command doesn't return last number.
+}
+
+```
+
+This is little tricky. To retrieve last document from journal first you must get
+last document number. Once you have it you can print it or get it.
+
+
+### Print journal document
+
+> Print document from journal
+
+```java
+...
+JournalControl control = (JournalControl) fiscalDevice;
+
+control.printJournalDocument(last);
+```
+
+Printing journal document is very simple if you know document number you want to print.
+
+<aside class="warning">On some devices print journal document isn't supported, but you can check it using device capabilities.</aside>
+
+
 ## Service
-### Non-fiscal receipt
+
+| Command | Description
+| ------- | -----------
+| `serviceCashIn()`               | Service cash in
+| `serviceCashOut()`              | Service cash out
+| `feedPaper()`                   | Feed paper given lines
+| `beep()`                        | Make beep sound signal
+| `printDiagnosticInfo()`         | Prints out diagnostic information about printer
+| `getLastTransactionStatus()`    | Check if there's open fiscal receipt and get some details on it, like amount not paid
+| `getLastFiscalReceiptDateTime()`| Get last fiscal transaction date and time
+| `setOperatorName()`             | Set new operator's name
+| `setOperatorPassword()`         | Change operator's password
+| `getRemainingFreeFiscalEntries()`| Check how many free entries are in the fiscal memory
+| `checkAndResolve()`             | Reset device to normal working state (if possible)
+
 ### Date and time
+
+Date and time can be set and get via `setDateTime()` and `getDateTime()`
+
+<aside class="warning">Date and time format is: dd-MM-yy hh:mm:ss</aside>
+
+## Custom command
+
+For all commands that aren't in SDK but supported by printer, there is `customCommand()`.
+
+`customCommand()` gets two arguments: `number` of command and command `parameters` as string, if any.
+Empty string is allowed if there's no parameters. Custom command return String as result. The result
+holds all response data in some format. This format is different or have small
+differences for all devices and commands.
+
+<aside class="warning">Before using custom command make sure you have understand format of input and output parameters for selected command on device you work with</aside>
+
 ###
