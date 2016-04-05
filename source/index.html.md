@@ -161,15 +161,13 @@ After we retrieve instance of our connected device and we want to use drawer sup
 - Then we must cast our device to drawer control interface
 - Execute controls methods
 
-> Suppose we have connected device and streams for input and output operations
+> Checking if device support drawer and if support it, we can use drawer control methods
 
 ```java
+
 FiscalDevice device ...
-```
 
-> Then we check if device support drawer and if support it, we can use drawer control methods
-
-```java
+...
 
 if (device.getBooleanCapability(DrawerControl.CAP_DRAWER)) {
   // Device support it
@@ -238,11 +236,12 @@ device.checkAndResolve();
 
 ```
 
-### Simple Sales
+### Simple receipt
 ### Simple display
 ### PLU item iterator
+### Text formatter
 
-# Usage
+# APIs Usage
 
 Make sure your printer is in normal state before executing single or multiple commands.
 If your printer stuck in some not working state, SDK can try to set it in normal state
@@ -312,15 +311,56 @@ try {
 }
 ```
 
-1. You must open fiscal receipt using registered operator
-2. Make sales single or multiple (with or without adjustment)
-<aside class="success">Remember - you can execute as many as you want sales in single fiscal receipt</aside>
-3. (Optional) Subtotal (with or without adjustment)
-4. You **MUST** execute `total` (single or multiple time, with same of different payment modes) to pay before closing fiscal receipt
-<aside class="warning">Overpaying with credit or debit is not allowed </aside>
+1. You must open fiscal receipt using registered operator using:
+
+    `openFiscalReceipt(int operator, String password, boolean invoice);`
+
+2. Make sales single or multiple (with or without adjustment) using on of following:
+
+    `sell(String item, double price, TaxGroup tax, double quantity);`
+
+    `sell(String item, double price, TaxGroup tax, double quantity, AdjustmentType type, double value);`
+
+    <aside class="success">Remember - you can execute as many as you want sales in single fiscal receipt</aside>
+3. (Optional) Subtotal (with or without adjustment) using one of:
+
+    `subtotal();`
+
+    `subtotal(AdjustmentType type, double value);`
+
+4. You **MUST** execute `total` (single or multiple time, regardless payment mode) to pay before closing receipt
+
+      All in cash: `total();`
+
+      All in desired paid mode: `total(PaidMode mode);`
+
+      Custom amount in desired paid mode: `total(PaidMode mode, double amount);`
+
+      <aside class="warning">Overpaying with credit or debit is not allowed </aside>
 5. Closing fiscal receipt
 
+    `closeFiscalReceipt()`
+
 <aside class="success">Remember - is allowed to print fiscal text in a opened receipt </aside>
+
+```java
+
+device.sell(...);
+...
+device.sell(...);
+...
+device.subtotal(...);
+
+// Print text
+device.printFiscalText("Promo code: 42424242");
+
+device.total();
+
+for (String line : lines) {
+  device.printFiscalText(line);
+}
+
+```
 
 ### Tax groups
 Every printer supports several tax groups. Mostly they are 6 or 8 but you can retrieve the right
@@ -361,6 +401,12 @@ try {
 If there's programmed items in device you can make sales using PLU number instead of text, price and all required for sale data.
 
 Check [Items](#items) section for more information about how you can program items stored in device.
+
+> Don't forget to close fiscal receipt when you're done with the sales
+
+```java
+device.closeFiscalReceipt();
+```
 
 ## Reports
 All fiscal devices supports X and Z daily reports, simple and detailed reports of fiscal memory by
