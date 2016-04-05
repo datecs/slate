@@ -1,20 +1,112 @@
 # Errors
 
-<aside class="notice">This error section is stored in a separate file in `includes/_errors.md`. Slate allows you to optionally separate out your docs into many files...just save them to the `includes` folder and add them to the top of your `index.md`'s frontmatter. Files are included in the order listed.</aside>
+> You can get error code and message from exception
 
-The Kittn API uses the following error codes:
+```java
+} catch (FiscalException e) {
+  final String msg = e.getErrorMessage();
+  final String code = e.getErrorCode();
+}
+```
 
+All incorrect command behavior is handled by our protocol and throws `FiscalException`.
+Exception have error code and message associated with this code. It can be logical
+error with command syntax or parameters or can be physical if there's no paper for example
+or low battery. Some errors reports wrong device state.
 
-Error Code | Meaning
----------- | -------
-400 | Bad Request -- Your request sucks
-401 | Unauthorized -- Your API key is wrong
-403 | Forbidden -- The kitten requested is hidden for administrators only
-404 | Not Found -- The specified kitten could not be found
-405 | Method Not Allowed -- You tried to access a kitten with an invalid method
-406 | Not Acceptable -- You requested a format that isn't json
-410 | Gone -- The kitten requested has been removed from our servers
-418 | I'm a teapot
-429 | Too Many Requests -- You're requesting too many kittens! Slow down!
-500 | Internal Server Error -- We had a problem with our server. Try again later.
-503 | Service Unavailable -- We're temporarially offline for maintanance. Please try again later.
+## Codes
+
+### Compatibility
+
+Error Code | Description
+------- | -------
+-150001 | ERR_SYNTAX
+-150002 | ERR_INVALID_COMMAND
+-150010 | ERR_PRINTER_IS_BLOCKED
+-150100 | ERR_DATETIME_NOT_SET
+-150101 | ERR_PAPER_END
+-150102 | ERR_EL_JOURNAL_ERROR
+-150103 | ERR_MATH_OVERFLOW
+-150104 | ERR_INVALID_PASSWORD
+-150105 | ERR_LESS_HEADER_LINES
+-150106 | ERR_INVALID_SERIAL_NUMBER
+-150107 | ERR_INVALID_DATA
+-150108 | ERR_PRINTER_FAULT
+-150109 | ERR_INVALID_IOSA
+-150110 | ERR_INVALID_RECEIPT_NUMBER
+-150200 | ERR_RECEIPT_IS_OPEN
+-150201 | ERR_RECEIPT_NOT_OPEN
+-150202 | ERR_SHIFT_IS_STARED
+-150203 | ERR_NO_SHIFT_STARED
+-150204 | ERR_SHIFT_OVER_24H
+-150205 | ERR_TIME_BEFORE_FM_TIME
+-150206 | ERR_TIME_BEFORE_EJ_TIME
+-150207 | ERR_PROBABLY_WRONG_TIME
+-150208 | ERR_NOT_IN_SERVICE_MODE
+-150209 | ERR_CANNOT_READ_EJ
+-150210 | ERR_CANNOT_WRITE_EJ
+-150211 | ERR_CANNOT_FORMAT_EJ
+-150212 | ERR_CANNOT_OPEN_DOCUMENT
+-150213 | ERR_NO_ACCESS_TO_DISPLAY
+-150214 | ERR_JOURNAL_NEAR_END
+-150215 | ERR_CANNOT_FORMAT_VALID_EJ
+-150216 | ERR_FORBIDDEN_RECEIPT_TYPE
+-150217 | ERR_TIME_ALREADY_ADJUSTED
+-150218 | ERR_TIME_BEFORE_CURRENT_TIME
+-150219 | ERR_MALOPR_NOT_ENABLED
+-150300 | ERR_FM_NOT_FORMATTED
+-150301 | ERR_SERIAL_NUMBER_NOT_SET
+-150302 | ERR_TAX_NUMBER_NOT_SET
+-150303 | ERR_VAT_RATES_NOT_SET
+-150304 | ERR_NO_ACTIVE_VAT_RATES
+-150305 | ERR_NOT_FISCALISED
+-150306 | ERR_IS_FISCALISED
+-150307 | ERR_NO_RECORDS_IN_FM
+-150308 | ERR_NO_FM_RESPONSE
+-150309 | ERR_TOO_MANY_RECORDS
+-150310 | ERR_SER_NUM_ALREADY_SET
+-150311 | ERR_FM_READ_ONLY
+-150312 | ERR_FM_DISCONNECTED
+-150313 | ERR_NOT_IOSA_NUMBER
+-150314 | ERR_IN_SERVICE_REPAIR
+-150315 | ERR_NOT_IN_SERVICE_REPAIR
+-150316 | ERR_FISCAL_NUMBER_SET
+-150400 | ERR_PLU_NOT_EXISTS
+-150401 | ERR_DPT_NOT_EXISTS
+-150402 | ERR_INVALID_VAT_GROUP
+-150403 | ERR_VAT_NOT_PERMITED
+-150404 | ERR_TOO_MANY_SALES
+-150405 | ERR_VOID_AFTER_PAY_OR_SD
+-150406 | ERR_NEGATIVE_TOTAL
+-150407 | ERR_DISCOUNT_TOO_BIG
+-150408 | ERR_VOID_NONEXISTING_SALE
+-150409 | ERR_PAYMENT_STARTED
+-150410 | ERR_PAYMENT_NOT_DEFINED
+-150411 | ERR_EVERYTHING_IS_PAID
+-150412 | ERR_TOTAL_NOT_PAID
+-150413 | ERR_NOT_ENOUGH_CASH
+-150414 | ERR_CASH_ONLY_ALLOWED
+-150415 | ERR_NO_CHANGE_ALLOWED
+-150416 | ERR_NONZERO_OPERATOR_DATA
+-150417 | ERR_NONZERO_PLU_DATA
+-150418 | ERR_NONZERO_DPT_DATA
+-150419 | ERR_NO_FREE_PLUS
+-150420 | ERR_TOO_MANY_TEXT_LINES
+-150421 | ERR_NO_TEXT_LINES
+-150422 | ERR_NONZERO_PAY_DATA
+-150423 | ERR_PLU_SOLD_IN_RECEIPT
+-150424 | ERR_NO_VELEPROD_INFO
+-150425 | ERR_VELEPROD_INFO_SET
+-150426 | ERR_NO_VELEPROD_RECEIPT
+-150427 | ERR_ZERO_OR_NEG_SUM_INPUT
+-150428 | ERR_PAYMENT_TYPE_NOT_ALLOWED
+-150429 | ERR_DUPLICATE_NAME
+-150600 | ERR_SKNO_NOT_RESPONDING
+-150601 | ERR_SKNO_NO_IDENT
+-150602 | ERR_SKNO_BLOCK_SERTIFIKAT
+-150603 | ERR_SKNO_BLOCK_ZREPORTS
+-150604 | ERR_SKNO_BLOCK_MEMORY
+-150605 | ERR_SKNO_CANNOT_OPEN_DAY
+-150606 | ERR_SKNO_CANNOT_SEND_DATA
+-150607 | ERR_SKNO_CANNOT_CLOSE_DAY
+-150608 | ERR_SKNO_CANNOT_END_DOC

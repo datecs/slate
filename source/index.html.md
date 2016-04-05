@@ -165,7 +165,6 @@ After we retrieve instance of our connected device and we want to use drawer sup
 > Checking if device support drawer and if support it, we can use drawer control methods
 
 ```java
-
 FiscalDevice device ...
 
 ...
@@ -215,8 +214,9 @@ TanzaniaExtension ext = (TanzaniaExtension) tanzanianPrinter;
 ```
 
 | Available extensions   |
-| :--------------------: |
+| ---------------------- |
 | `TanzaniaExtension`    |
+| `BosniaExtension`      |
 
 # Helpers
 Helper classes wraps protocol and provide nice and easy methods for common operations.
@@ -237,10 +237,78 @@ device.checkAndResolve();
 
 ```
 
+> Create instance of SimpleReceipt helper class
+
+```java
+SimpleReceipt receipt = SimpleReceipt.create(device);
+```
+
+All helper classes are created using `FiscalDevice` instance with the static method `create()`
+on the given helper class, for example:
+
+`SimpleDisplay easy = SimpleDisplay.create(device);`
+
 ### Simple receipt
+
+`SimpleReceipt` helps executing widely used both fiscal or non-fiscal commands.
+
+For example with `SimpleReceipt` you can:
+
+- Batch print of non-fiscal text lines
+- Make sales using builders
+
+Builders can be saved and changed to create easy batch of sales, subtotals and totals.
+
 ### Simple display
+
+`SimpleDisplay` extends `DisplayControl` functionality and add:
+
+- Floating text support
+- Multiline text support
+
 ### PLU item iterator
+
+> Example usage of PLU item iterator
+
+```java
+// By default: forward direction, starting from first, iterating all programmed items
+PluItemIterator iterator = PluItemIterator.create(device);
+
+// or
+
+iterator = PluItemIterator.create(device, Direction.FORWARD, Type.ITER_PROGRAMMED, 1);
+
+...
+
+// Now iterate
+
+while (iterator.hasNext()) {
+  PluItem nextItem = iterator.next();
+
+  // PluItem object provides getters for all supported fields
+
+  nextItem.getName();
+  nextItem.getPrice();
+
+  ...
+}
+
+```
+
+`PluItemIterator` provide Java style iteration of programmed items. Supports both
+forward and backward direction of iteration and also can iterate over programmed,
+these with sales and non programmed items. You can specify it by creating iterator
+with chosen type. Iteration will stop when there are no more items which not meet
+the requirements.
+
+Also wraps `FiscalResponse` in a more usable and handy object called `PluItem`.
+
 ### Text formatter
+
+`TextFormatter` helps aligning and formatting text which can span on whole line.
+This is useful when creating or using receipt text templates on different devices
+or different paper size. `TextFormatter` will get current connected device available
+text length to span the text. This will work on all devices.
 
 # APIs Usage
 
@@ -352,7 +420,6 @@ try {
 <aside class="success">Remember - is allowed to print fiscal text in a opened receipt </aside>
 
 ```java
-
 device.sell(...);
 ...
 device.sell(...);
@@ -436,23 +503,49 @@ For report by date or number use:
 
 ### Available methods
 
-| Method | Description |
-| ------ | ----------- |
-| `defineItem()` |
-| `changeItemQuantity()` |
-| `getItemsInfo()` |
-| `getItem()` |
-| `getFirstItem()` |
-| `getLastItem()` |
-| `getNextItem()` |
-| `getFirstItemWithSales()` |
-| `getLastItemWithSales()` |
-| `getNextItemWithSales()` |
-| `getFirstFreeItem()` |
-| `getLastFreeItem()` |
-| `deleteItem()` |
-| `deleteItems()` |
-| 'deleteItems()' |
+| Method                    | Description |
+| ------------------------- | ----------- |
+| `defineItem()`            | Program item |
+| `changeItemQuantity()`    | Change item availability
+| `getItemsInfo()`          | Get info about items
+| `getItem()`               | Get single item by plu number
+| `getFirstItem()`          | Get first programmed item
+| `getLastItem()`           | Get last programmed item
+| `getNextItem()`           | Get next programmed item
+| `getFirstItemWithSales()` | Get first item with sales
+| `getLastItemWithSales()`  | Get last item with sales
+| `getNextItemWithSales()`  | Get next item with sales
+| `getFirstFreeItem()`      | Get first free item to be programmed
+| `getLastFreeItem()`       | Get last free item to be programmed
+| `deleteItem()`            | Delete item by plu number
+| `deleteItems()`           | Delete all items
+| `deleteItems(int, int)`   | Delete all items in a range
+
+### Work with items
+
+Most of Datecs fiscal devices supports programmable items. There are APIs making
+item sales using plu number.
+
+Iterating over items can be achieved like using C++/Java style iterator. First you
+point the iterator to position, for example `getFirstItem()` or `getFirstItemWithSales()`
+and increment the iterator's position every time you want to get the next element.
+Incrementing in this context is executing `getNextItem()` or `getNextItemWithSales()`.
+Iteration must stop when command return error, so you have to check your self the result.
+
+Getting item will return `FiscalResponse` object which in case of items will contains all or most of fields in `FiscalPluItemParams`:
+
+| Field             |
+| ----------------- |
+| ITEM_NAME         |
+| ITEM_PLU          |
+| ITEM_PRICE        |
+| ITEM_TOTAL        |
+| ITEM_SOLD         |
+| ITEM_STOCK        |
+| ITEM_STOCK_GROUP  |
+
+Check [helpers section](#helpers) about PLU item iterator which makes iterating items more simple and easy.
+Also wraps `FiscalResponse` in a more friendly `PluItem` object.
 
 ## Journal
 
