@@ -3,7 +3,6 @@ title: Fiscal Framework 2.1.0 API Reference
 
 language_tabs:
   - java
-  - python
 
 toc_footers:
   - <a href='#'>Datecs Ltd.</a>
