@@ -1,5 +1,5 @@
 ---
-title: Fiscal Framework 2.1.0 API Reference
+title: Fiscal Framework 2.2.0 API Reference
 
 language_tabs:
   - java
@@ -11,6 +11,7 @@ toc_footers:
 includes:
   - errors
   - api/fprint
+  - changelog/2-2-0
   - changelog/2-1-0
   - changelog/2-0-0
 
@@ -47,6 +48,7 @@ All device classes extends our fiscal protocol interface and implement it.
 
 | Name      | Localization | Supported from |
 |:----------|:-------------|:--------------:|
+| FP-700    |   Moldova    |      2.2.0     |
 | FP-700    |   Federation Bosnia | 2.1.0   |
 | FMP-705KL |   Bulgaria   |      2.1.0     |
 | WP-500KL  |   Bulgaria   |      2.1.0     |
@@ -90,17 +92,10 @@ Correct auto detection is not 100% guarantee, because lies on internal firmware 
 Using auto detect in some cases we need to know at runtime the type or model of device we have connected.
 For this purpose SDK expose handy parameters and easy methods to check this for every device.
 
-| Property                            | Example value      |
-| :---------------------------------- | :---------------   |
-| `FiscalProperties.DEVICE_MODEL`     | `FMP350`           |
-| `FiscalProperties.DEVICE_VARIANT`   | `KL`               |
-| `FiscalProperties.DEVICE_COUNTRY`   | `Country.BULGARIA` |
-| `FiscalProperties.DEVICE_QUALIFIER` | `FMP350KLBGR`      |
-
-> Example of retrieving of device Property
+> Example of retrieving of device info property
 
 ```java
-Country deviceLocalization = device.getProperty(FiscalProperties.DEVICE_COUNTRY);
+Country deviceLocalization = device.getInfo().getDeviceCountry();
 ```
 
 ## Explicitly
@@ -126,6 +121,24 @@ Use this method to create device instance only if you know the physical device y
 
 If you initialize wrong device type of physical one, you can get strange commands behavior.
 Most of the commands can failed on execution.
+
+# Device information
+
+```java
+final FiscalDevice device...
+final FiscalDeviceInfo information = device.getInfo();
+
+final boolean supportsCutter = info.capCutter();
+final int maxPrintTextLen = info.getPrintTextLength();
+
+```
+
+Every `FiscalDevice` instance contains `FiscalDevceInfo` object which can be retrieved by `getInfo()` method. This class return capabilities and properties
+of currently connected device. Methods starting with `cap` return capabilities. Starting with `get` returns device properties.
+
+For example `device.getInfo().capPrintDetailedReportByDate()` will return `boolean` indicating whenever currently connected device supports print of detailed report by date.
+
+<aside class="warning">Fiscal device information must be used instead of obsoleted properties and capabilities.</aside>
 
 # Controls
 Controls are pluggable modules when describing device. Example of pluggable controls are cutter,
@@ -168,7 +181,7 @@ FiscalDevice device ...
 
 ...
 
-if (device.getBooleanCapability(DrawerControl.CAP_DRAWER)) {
+if (device.getInfo().getCapDrawer()) {
   // Device support it
   DrawerControl drawer = (DrawerControl) device;
   drawer.openDrawer(100);
@@ -177,15 +190,6 @@ if (device.getBooleanCapability(DrawerControl.CAP_DRAWER)) {
 }
 
 ```
-
-| Control    | Capability constant                            |
-|------------|------------------------------------------------|
-|Barcode     | ```BarcodeControl.CAP_BARCODE```               |
-|Display     | ```DisplayControl.CAP_EXT_DISPLAY```           |
-|Cutter      | ```CutterControl.CAP_CUTTER```                 |
-|Drawer      | ```DrawerControl.CAP_DRAWER```                 |
-|Journal     | ```JournalControl.CAP_JOURNAL```               |
-|Rotated Rec | ```RotatedReceiptControl.CAP_ROT_NON_FISCAL``` |
 
 # Extensions
 Extensions are like controls but are country oriented and provides custom common methods for given country.
@@ -440,7 +444,7 @@ for (String line : lines) {
 Every printer supports several tax groups. Mostly they are 6 or 8 but you can retrieve the right
 supported number using printer's properties:
 
-`int supportedRates = device.getIntProperty(FiscalProperties.NUM_VAR_RATES);`
+`int supportedRates = device.getInfo().getVatRates();`
 
 <aside class="notice"> Methods requiring tax group uses `TaxGroup` enum. </aside>
 
@@ -448,7 +452,7 @@ supported number using printer's properties:
 Printers support all common payment modes and some custom user-defined. If you want to know how many
 custom payment you can configure, use printer's properties:
 
-`int customPayments = device.getIntProperty(FiscalProperties.NUM_CUSTOM_PAYMENTS);`
+`int customPayments = device.getInfo().getCustomPayments();`
 
 <aside class="notice"> Methods requiring payment uses `PaidMode` enum. </aside>
 
