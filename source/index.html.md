@@ -170,13 +170,45 @@ implements `JournalControl` and `DisplayControl`.
 
 ## Fill the properties
 
-TODO
+```java
+  @Device(
+          programmableItems = 12000,
+          displayTextLength = 20,
+          printTextLength = 36,
+          vatRates = 8,
+          customPayments = 0
+  )
+  @Model("DP15")
+  @Variant("KL")
+  @Localization(Country.BULGARIA)
+  @TransportProtocol(TransportProtocolV1.class)
+  class DP15 extends FMP10 implements DisplayControl, JournalControl {
+    ...
+  }
+```
 
+Device properties must be described in `@Device` annotation. There are some required and some
+optional properties to be filled.
 
 ## Bind statuses (if needed)
 
 # Add an new property
+
+The only thing you need is to add the desired property in `@Deivce` annotation class.
+After that depending on that if the property is optional or required you must give
+values to all supported devices.
+
 # Add an new capability
+
+Adding new capability requires adding method starting `cap` in `FiscalDeviceInfo` class.
+
+## Resolving
+
+At device compilation, processor will try to match this method with one of all implemented
+or copied methods or by getting all implemented interfaces. If processor cannot resolve
+the right capability value, you must set it explicitly.
+
+![devices structure](../images/capabilities_mapping.jpg)
 
 # Commands
 
