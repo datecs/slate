@@ -17,7 +17,7 @@ search: true
 # Introduction
 
 Datecs Fiscal devices works on custom internal synchronous command-response protocol.
-With variety of devices and their functionality, where are minor protocol differences
+With variety of devices and their functionality, there can be found minor protocol differences
 on all of the devices. To rapid adding devices to `Fiscal Framework` we decide to use
 `Java annotations` and `Java annotations processor` to describe devices and generate
 implementations to work with the fiscal protocol.
@@ -103,6 +103,9 @@ public class TestDevice extends FiscalDevice {
 - **@Localization** - specify device's Localization. All are located in `Country` enum.
 - **@TransportProtocol** - specify class for communication. In this case we will use `TransportProtocolV2`
 
+This is the minimum requirement for compiling device through the processor.
+In this case processor will generates device which supports nothing, cool ah?
+
 ## Extend all needed modules
 
 > Implements needed controls
@@ -163,10 +166,12 @@ public class TestDevice extends FiscalDevice implements JournalControl, DisplayC
 }
 ```
 
-Our first test device supports electronic journal and external display. We need to
+Our first test device supports electronic journal and external display, so we need to
 implements `JournalControl` and `DisplayControl`.
 
-<aside class="notice">Processor automatically populate devices capabilities by checking all implemented interfaces. </aside>
+<aside class="success">Processor automatically populate devices capabilities by checking all implemented interfaces. </aside>
+
+Notice that **not annotated** methods and commands are not processing by the processor.
 
 ## Fill the properties
 
@@ -190,8 +195,6 @@ implements `JournalControl` and `DisplayControl`.
 Device properties must be described in `@Device` annotation. There are some required and some
 optional properties to be filled.
 
-## Bind statuses (if needed)
-
 # Add an new property
 
 The only thing you need is to add the desired property in `@Deivce` annotation class.
@@ -200,13 +203,21 @@ values to all supported devices.
 
 # Add an new capability
 
+> Example of capability
+
+```java
+public boolean capDisplay() { return false; }
+```
+
 Adding new capability requires adding method starting `cap` in `FiscalDeviceInfo` class.
+For example: `boolean capDisplay() { return false; }`
 
 ## Resolving
 
 At device compilation, processor will try to match this method with one of all implemented
 or copied methods or by getting all implemented interfaces. If processor cannot resolve
-the right capability value, you must set it explicitly.
+the right capability value, you must set it explicitly. By default all capabilities are `false`
+and properties are with empty or 0 values.
 
 ![devices structure](../images/capabilities_mapping.jpg)
 
@@ -365,5 +376,87 @@ specify the map key for given token.
 
 In case where command does not return any response or response must be ignored, use `@WithoutResponse` annotation instead.
 
+### Status reported by response
+
+Some commands returns execution status or result in the response.
+You can handle this with `@WhenFailed` or `@WhenSuccess` annotations.
+
+`@WhenSuccess("0")` for example will validate that first argument of the response is 0.
+If argument value is something different then exception will be thrown. There are
+situations where the result is merged with the next argument for example `"P0001"`,
+where `P` is the status and `0001` first usable argument. In this case we can use
+`@WhenSuccess(value = "P", split = 1)` - this will tell the processor to split
+the first argument and do the necessaries checks.
+
+<aside class="notice">@WhenFailed works as same way as @WhenSuccess</aside>
+
 ## Custom validators and bindings
+
+Custom validators and biding are needed in some cases. Cases where the input parameter must
+be processed before it will be send to the command or device. Cases where you must get
+value from somewhere else.
+
+This processor supports 2 types of bindings (validators)
+
+### Status bindings
+
+> Binding status bits to error response for the command
+
+```java
+@Override
+@CommandSpec("53")
+@ArgumentsSpec({
+       @Parameter("^t"),
+       @Parameter(value = "Mode", resolve = @ResolveStrategy(value = GET_METHOD_PARAM, resolvedValue = "getPaidMode")),
+       @Parameter(value = "Amount", resolve = @ResolveStrategy(GET_METHOD_PARAM))
+})
+@ResponseSpec({@Parameter("PaidCodeAmount")})
+@CheckStatusSpec(value = {
+  @StatusSpec(statusByte = 0, statusBit = 5),
+  @StatusSpec(statusByte = 4, statusBit = 5)
+}, resolveValue = "getErrorCodeFromStatus")
+public FiscalResponse total(PaidMode mode, double amount) throws FiscalException, NotSupportedException, IOException {
+   return super.total(mode, amount);
+}
+```
+
+Some devices reports their status by low level status bytes and bits. Every status bit mean
+something. In some cases reported statuses indicates error on command execution instead of
+returning error code in the command response. Example for error status is when paper ends.
+
+Using `@CheckStatusSpec` you can specify and bind error statuses to the command response, using
+array of `@StatusSpec`.
+
+In the example above we tell the processor that if **after** command execution bytes `0.5` and `4.5` are
+on, this indicates error while executing the command. Passing method name to `resolveValue`
+will map these statuses to error constants and messages which can be found in `FiscalException` and `FiscalErrorCodes`
+
+### Method bindings (proxies)
+
+Looking at `total` command above you can find line looking this:
+
+` @Parameter(value = "Mode", resolve = @ResolveStrategy(value = GET_METHOD_PARAM, resolvedValue = "getPaidMode")),`
+
+This line must tell you something like this:
+
+*"There is parameter named Mode, which must be resolved by getting
+Mode method parameter and resolve the real value by putting current value
+as argument to getPaidMode and return me the right value."*
+
+Another example is when binding statuses. Look again at the `total` command above.
+Reading `@CheckStatusSpec` must tell you something right this:
+
+*"Processor must check statuses 0.5 and 4.5 after execution of this command.
+Resolve the errors using getErrorCodeFromStatus method and."*
+
+In most cases proxies methods input in single string and the output is whatever
+you need - `boolean`, `Enum`, `String` etc...
+
 ## Custom methods (where there's no other way)
+
+In some cases the annotations DSL is not enough. Less effort is required if
+you hand write the method, but how can this be copied into generated file.
+There's way to tell the processor *Copy this method for me* using `@Copy` annotation.
+
+On copy processor will figure if the method override or not and will put `@Override`
+if needed!
