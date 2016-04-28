@@ -46,11 +46,16 @@ All device classes extends our fiscal protocol interface and implement it.
 
 ## Supported devices
 
-| Name      | Localization | Supported from |
+| Name      | Country      | Supported from |
 |:----------|:-------------|:--------------:|
-| FP-700    |   Moldova    |      2.2.0     |
-| FP-700    |   Federation Bosnia | 2.1.0   |
-| FMP-705KL |   Bulgaria   |      2.1.0     |
+| FMP-350D  |   Bulgaria   |      2.2.0     |
+| DP-05BKL  |   Bulgaria   |      2.2.0     |
+| DP-05KL   |   Bulgaria   |      2.2.0     |
+| DP-45KL   |   Bulgaria   |      2.2.0     |
+| DP-35KL   |   Bulgaria   |      2.2.0     |
+| FP-700CRX |   Moldova    |      2.2.0     |
+| FP-700CRX |   Federation Bosnia | 2.1.0   |
+| FP-705KL  |   Bulgaria   |      2.1.0     |
 | WP-500KL  |   Bulgaria   |      2.1.0     |
 | DP-15KL   |   Bulgaria   |      2.1.0     |
 | DP-150KL  |   Bulgaria   |      2.1.0     |
