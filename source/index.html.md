@@ -460,3 +460,152 @@ There's way to tell the processor *Copy this method for me* using `@Copy` annota
 
 On copy processor will figure if the method override or not and will put `@Override`
 if needed!
+
+# Testing
+
+This project uses [Cucumber](https://cucumber.io/) [BDD](https://www.google.bg/#q=BDD)
+testing suite because we are testing both SDK and device behavior.
+Cucumber uses Gherkins - Business Readable, Domain Specific Language.
+All test case scenarios are located in `/devices/src/test/resources`
+and the scenarios code-specific implementations can be found under
+`/devices/src/test/java` directory.
+
+![testing structure](../images/cucumber.jpg)
+
+## DI
+
+As you can see all BDD tests are separated in `feature` files in different categories.
+All implementation code-specific steps are located in `StepDefs` java files.
+Because of this separation we use dependency injection to pass different objects
+between the `StepDefs` files. Example for passing object is the `FiscalDevice`
+objects with communicates with the connected device. DI helps us pass single
+instance on multiple java classes.
+
+Don't worry we provide handy way to create easily tests.
+
+## Writing tests
+
+Writing test contains 3 steps.
+
+0. Create `feature` file and write scenarios
+0. Write `StepDefs` for the scenarios.
+0. Make some preprocess checks, because some devices MUST fail on particular tests
+and some devices MUST NOT fail.
+
+This looks something like this and it's part of the features and step definitions:
+
+> In the feature
+
+```Gherkins
+Background: To test journal we need normal functionality device supporting journal control checking capability
+    Given fiscal device in normal state
+    And device supports journal
+```
+
+> And the step definition
+
+```java
+
+// In CommonStepDefs.java
+
+@Given("^fiscal device in normal state$")
+public void fiscalDeviceInNormalState() throws Throwable {
+   assertNotNull("Device cannot be null", device());
+   device().checkAndResolve();
+}
+
+ // In JournalStepDefs.java
+
+ @And("^device supports journal$")
+public void deviceSupportsJournal() throws Throwable {
+    assertTrue(device().getInfo().capJournal());
+}
+```
+
+<aside class="success">Note that feature can combine step definitions
+implemented in different java classes.</aside>
+
+### Create feature
+
+We follow the official cucumber guide.
+
+> Example feature for reports
+
+```Gherkins
+Feature: Reports
+  This feature shows and check execution of several command which prints reports.
+  Reports can be by date and by number. There are also X and Z daily reports.
+
+  Background: To test reports we need normal functionality device
+    Given fiscal device in normal state
+
+  Scenario: Print X report
+    When device supports X report
+    And initialize X report
+    Then command must execute normally
+
+  Scenario: Print Z report
+    When device supports Z report
+    And initialize Z report
+    Then command must execute normally
+```
+After we are done defining scenarios it's time to implement the step definitions.
+
+### Implement step definitions
+
+> Reports step definitions
+
+```java
+public class ReportsStepDefs extends StepDefsWrapper {
+  public ReportsStepDefs(StepDefsBase base) {
+      super(base);
+  }
+
+  @When("^initialize X report$")
+  public void initializeXReport() throws Throwable {
+      try {
+          device().printXReport();
+      } catch (Exception e) {
+          exception(e);
+      }
+  }
+
+  @When("^initialize Z report$")
+  public void initializeZReport() throws Throwable {
+      try {
+          device().printZReport();
+      } catch (Exception e) {
+          exception(e);
+      }
+  }
+
+  @When("^device supports X report$")
+  public void deviceSupportsXReport() throws Throwable {
+      assertTrue(device().getInfo().capPrintXReport());
+  }
+
+  @When("^device supports Z report$")
+  public void deviceSupportsZReport() throws Throwable {
+      assertTrue(device().getInfo().capPrintZReport());
+  }
+}
+```
+
+And here is the tricky part!
+
+### Cucumber wrappers
+
+![cucumber wrapper](../images/cucumber_wrapper.jpg)
+
+All step definitions java classes must extends our wrapper/helper class named `StepDefsWrapper`
+which provides access to the connected device, setters and getters of the response
+and more.
+
+Setters and getters to the response in needed in case you want to check response
+and/or exception after command execution.
+
+<aside class="warning">Because cucumber-jvm does not support junit rules, we try-catch
+and save exceptions. Then check them.</aside>
+
+<aside class="note">StepDefsWrapper holds instance of StepDefBase which is injection using
+pico container.</aside>

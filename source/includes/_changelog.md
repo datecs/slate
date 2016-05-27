@@ -2,6 +2,7 @@
 
 ## 2.2.0
 ### Added
+- Generating FiscalDetector
 - Populate device information semi-automatically
 - Recognize match and populate device properties
 - Ability to detect and populate automatically new capabilities in device information
