@@ -48,6 +48,8 @@ All device classes extends our fiscal protocol interface and implement it.
 
 | Name      | Country      | Supported from |
 |:----------|:-------------|:--------------:|
+| FMP-350CRX|   Malawi     |      2.2.0     |
+| FP-700CRX |   Malawi     |      2.2.0     |
 | FMP-350D  |   Bulgaria   |      2.2.0     |
 | DP-05BKL  |   Bulgaria   |      2.2.0     |
 | DP-05KL   |   Bulgaria   |      2.2.0     |
@@ -70,9 +72,9 @@ All device classes extends our fiscal protocol interface and implement it.
 Before start using APIs you must retrieve instance of `FiscalDevice` class which implements `FiscalProtocol` interface.
 
 For this purpose you must have connected device and two streams - `InputStream` and an `OutputStream` for communication. There's no limitations where from you get these streams.
-Can be from Bluetooth, USB, TCP/IP connection.
+Can be from Bluetooth, USB, TCP/IP connection etc.
 
-After this using these streams you must create instance to work with, using one of the following methods:
+After retrieving these streams you must create device instance to work with, using one of the following methods:
 
 1. FiscalDetector - auto detecting connected device
 2. Explicitly - if you know device model
@@ -86,6 +88,11 @@ InputStream is = ...
 OutputStream os = ...
 
 FiscalDevice device = FiscalDetector.create(is, os);
+
+// Nullcheck the device!
+if (device == null) {
+  throw new IllegalAccessException("Device cannot be detect");
+}
 ```
 
 <aside class="warning">
@@ -103,20 +110,26 @@ For this purpose SDK expose handy parameters and easy methods to check this for 
 Country deviceLocalization = device.getInfo().getDeviceCountry();
 ```
 
+<aside class="notice">
+Check FiscalInfo class for more information and available fields.
+</aside>
+
 ## Explicitly
 
-> Suppose we have FMP-350 KL for Bulgaria, connected with streams for communication
+> Suppose we have FMP-350 KL for Bulgaria connected
 
 ```java
 InputStream is = ...
 OutputStream os = ...
 
+// Using base fiscal device class
 FiscalDevice device = new FMP350KLBGR(in, out);
 ```
 
 > Or concrete instance
 
 ```java
+// Using concrete class
 FMP350KLBGR concrete = new FMP350KLBGR(in, out);
 ```
 
@@ -175,6 +188,8 @@ public final AwesomeFiscalPrinter extends FiscalDevice implements BarcodeControl
 
 After we retrieve instance of our connected device and we want to use drawer support for example.
 
+**(This method can be used for all the controls)**
+
 - First we need to check device capability.
 - Then we must cast our device to drawer control interface
 - Execute controls methods
@@ -200,7 +215,8 @@ if (device.getInfo().getCapDrawer()) {
 Extensions are like controls but are country oriented and provides custom common methods for given country.
 
 <aside class="success">
-Rembmber - If you have instance of Tanzanian device for sure you can cast your device to Tanzanian extension without checking any properties or capabilities.
+Rembmber - If you have instance of Tanzanian device for sure you can cast your device to
+Tanzanian extension without checking any properties or capabilities.
 </aside>
 
 For example if we have instance of Tanzanian FP-700 KL device class.
@@ -223,10 +239,15 @@ TanzaniaExtension ext = (TanzaniaExtension) tanzanianPrinter;
 
 | Available extensions   |
 | ---------------------- |
+| `MalawiExtension`      |
 | `TanzaniaExtension`    |
 | `BosniaExtension`      |
 
+In very rare cases you might work with devices with different localization. It this case
+you can check the device localization using `getInfo().getDeviceCountry()`.
+
 # Helpers
+
 Helper classes wraps protocol and provide nice and easy methods for common operations.
 There are also classes which use Java core classes advantages to make some operations,
 command and logic more easy and clean.
@@ -260,10 +281,10 @@ on the given helper class, for example:
 
 `SimpleReceipt` helps executing widely used both fiscal or non-fiscal commands.
 
-For example with `SimpleReceipt` you can:
+For example with `SimpleReceipt` you can do:
 
 - Batch print of non-fiscal text lines
-- Make sales using builders
+- Make sales using Java builders
 
 Builders can be saved and changed to create easy batch of sales, subtotals and totals.
 
@@ -310,6 +331,10 @@ with chosen type. Iteration will stop when there are no more items which not mee
 the requirements.
 
 Also wraps `FiscalResponse` in a more usable and handy object called `PluItem`.
+
+When we programming items, `PluItemIterator` will return `PluItem` supplied only
+with the item number. Using this number you can programming the item using
+`device.defineItem(...)`.
 
 ### Text formatter
 
@@ -564,11 +589,16 @@ Also wraps `FiscalResponse` in a more friendly `PluItem` object.
 Most of the devices supports EJ (aka. Electronic Journal). EJ holds all both
 fiscal and non-fiscal data in energy independent memory. EJ has it's own capacity.
 In some situations you must have read access to old documents. Datecs Fiscal Framework
-provides simple way to retrieve documents from the journal, by name or by some date time range.
+provides simple way to retrieve documents from the journal, by number or by some date time range.
 
 ### Get journal documents
 
+> Getting document can be only by document number
 
+```java
+final JournalControl journal = (JournalControl) device();
+journal.getJournalDocument(document);
+```
 
 ### Get last document from the journal
 
@@ -600,6 +630,20 @@ if (last != -1) {
 This is little tricky. To retrieve last document from journal first you must get
 last document number. Once you have it you can print it or get it.
 
+### Get journal documents in a range
+
+> Consider using not deprecated method with callback
+
+```java
+final JournalControl journal = (JournalControl) device();
+journal.getJournalDocuments(startDate, endDate, JournalControl.RecordType.ALL, new JournalControl.Callback() {
+    @Override
+    public boolean onJournalEntryReceived(String entry) {
+        // Return true if you want to continue querying, false otherwise
+        return true;
+    }
+});
+```
 
 ### Print journal document
 
