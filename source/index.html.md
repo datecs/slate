@@ -11,6 +11,7 @@ toc_footers:
 includes:
   - errors
   - api/fprint
+  - changelog/2-3-0
   - changelog/2-2-0
   - changelog/2-1-0
   - changelog/2-0-0
@@ -48,6 +49,7 @@ All device classes extends our fiscal protocol interface and implement it.
 
 | Name      | Country      | Supported from |
 |:----------|:-------------|:--------------:|
+| FMP-350CRX|   Tanzania   |      2.3.0     |
 | FMP-350CRX|   Malawi     |      2.2.0     |
 | FP-700CRX |   Malawi     |      2.2.0     |
 | FMP-350D  |   Bulgaria   |      2.2.0     |
